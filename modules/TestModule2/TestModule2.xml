@@ -23,6 +23,13 @@
         <tag name="mex_url"      type="system-input" />
         <tag name="bisque_token" type="system-input" />
     </tag>
+    
+    <tag name="outputs">
+	<tag name="img" type="image">
+	   <gobject name="segment" />
+	</tag>
+    </tag>
+
 
     <tag name="title" value="TestModule2" />
     <tag name="authors" value="Ryan Kitchen" />
