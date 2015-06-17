@@ -26,7 +26,11 @@
     
     <tag name="outputs">
 	<tag name="img" type="image">
-	   <gobject name="segment" />
+	   <gobject name="segment">
+		<template>
+			<tag name="gobject" value="polygon" />
+		</template>
+	   </gobject>
 	</tag>
     </tag>
 
