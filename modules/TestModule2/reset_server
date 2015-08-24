@@ -1,5 +1,0 @@
-#!/bin/sh
-
-source ~/bisque/bqenv/bin/activate
-sudo supervisorctl restart bisque:
-bq-admin module register -u admin:admin http://bisquedemo:27000/engine_service/TestModule2
