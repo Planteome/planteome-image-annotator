@@ -1,54 +1,54 @@
 ###################################################################
 #                                                                 #
-#    MAXFLOW - software for computing mincut/maxflow in a graph   #
-#                        Version 3.0                              #
+#   DYNNAMIC GRAPH CUTS - software for dynamically computing      #
+#		mincut/maxflow in a graph   			  #
+#                        Version 2	                          #
+#  (based on Ver 3.0 of MAXFLOW Code of Vladimir Kolmogorov       #
+#               and Yuri Boykov)				  #
 #    http://www.cs.adastral.ucl.ac.uk/~vnk/software.html          #
 #                                                                 #
-#    Yuri Boykov (yuri@csd.uwo.ca)                                #
-#    Vladimir Kolmogorov (vnk@adastral.ucl.ac.uk)                 #
-#    2001-2006                                                    #
-#                                                                 #
+#         Pushmeet Kohli 		    Philip H.S. Torr  	  #
+#  (pushmeet.kohli@brookes.ac.uk)   (philiptorr@brookes.ac.uk)    #
 ###################################################################
 
 1. Introduction.
 
-This software library implements the maxflow algorithm described in
+This software library implements the dynamic maxflow algorithm
+described in
 
-	"An Experimental Comparison of Min-Cut/Max-Flow Algorithms for Energy Minimization in Vision."
+	Efficiently Solving Dynamic Markov Random Fields
+	using Graph Cuts
+
+	In the Tenth IEEE International Conference on Computer Vision
+	(ICCV 2005)
+
+
+The algorithm uses the maxflow algorithm code described in: 
+
+	An Experimental Comparison of Min-Cut/Max-Flow Algorithms
+	for Energy Minimization in Vision.
 	Yuri Boykov and Vladimir Kolmogorov.
 	In IEEE Transactions on Pattern Analysis and Machine Intelligence (PAMI), 
 	September 2004
 
-This algorithm was developed by Yuri Boykov and Vladimir Kolmogorov
-at Siemens Corporate Research. To make it available for public use,
-it was later reimplemented by Vladimir Kolmogorov based on open publications.
-
+We thank Yuri Boykov and Vladimir Kolomogorov for providing the code.
 If you use this software for research purposes, you should cite
-the aforementioned paper in any resulting publication.
+the aforementioned papers in any resulting publication.
 
-----------------------------------------------------------------------
+**We thank Christof Hoppe (TU Graz) and Steffen Gauglitz (UCSB) for fixing bugs in the memory allocation.**
 
-REUSING TREES:
-
-Starting with version 3.0, there is a also an option of reusing search
-trees from one maxflow computation to the next, as described in
-
-	"Efficiently Solving Dynamic Markov Random Fields Using Graph Cuts."
-	Pushmeet Kohli and Philip H.S. Torr
-	International Conference on Computer Vision (ICCV), 2005
-
-If you use this option, you should cite
-the aforementioned paper in any resulting publication.
-
-Tested under windows, Visual C++ 6.0 compiler and unix (SunOS 5.8
-and RedHat Linux 7.0, GNU c++ compiler).
 
 ##################################################################
 
-2. License & disclaimer.
+2. License.
 
-    Copyright 2001 Vladimir Kolmogorov (vnk@adastral.ucl.ac.uk), Yuri Boykov (yuri@csd.uwo.ca).
+    This source code also comes under the following license:
+    Copyright 2001 Vladimir Kolmogorov (vnk@cs.cornell.edu), Yuri Boykov (yuri@csd.uwo.ca).
 
+
+    Copyright 2005 Pushmeet Kohli (pushmeet.kohli@brookes.ac.uk),
+		   Philip HS Torr (philiptorr@brookes.ac.uk).
+        
     This software can be used for research purposes only.
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -65,24 +65,72 @@ and RedHat Linux 7.0, GNU c++ compiler).
 
 ##################################################################
 
-3. Example usage.
+3. Graph representation.
 
-This section shows how to use the library to compute
-a minimum cut on the following graph:
+The graph is represented as a adjacency list.
+
+##################################################################
+
+4. Example usage.
+
+This section shows how to use the library to dynamically re-compute
+a minimum cut on the following graphs:
+
+
+Orignal Graph 
+
 
 		        SOURCE
 		       /       \
-		     1/         \2
-		     /      3    \
+		    78/         \0
+		     /      78   \
 		   node0 -----> node1
 		     |   <-----   |
-		     |      4     |
+		     |      0     |
 		     \            /
-		     5\          /6
+		     0\          /78
 		       \        /
 		          SINK
 
+
+
+Modified Graphs
+
+			  SOURCE
+		       /       \
+		    15/         \0
+		     /     1     \
+		   node0 -----> node1
+		     |   <-----   |
+		     |     4      |
+		     \            /
+		     5\          /78
+		       \        /
+		          SINK
+
+
+Modified Graphs
+
+
+		        SOURCE
+		       /       \
+		    78/         \0
+		     /     1     \
+		   node0 -----> node1
+		     |   <-----   |
+		     |     4      |
+		     \            /
+		     0\          /78
+		       \        /
+		          SINK
+
+		      
+
+
 ///////////////////////////////////////////////////
+
+
+/* example.cpp */
 
 #include <stdio.h>
 #include "graph.h"
@@ -95,27 +143,49 @@ int main()
 	g -> add_node(); 
 	g -> add_node(); 
 
-	g -> add_tweights( 0,   /* capacities */  1, 5 );
-	g -> add_tweights( 1,   /* capacities */  2, 6 );
-	g -> add_edge( 0, 1,    /* capacities */  3, 4 );
+	g -> edit_tweights(0, 78, 0);
+	g -> edit_tweights(1, 0, 78);
+	g -> add_edge(0, 1, 78, 0);
 
 	int flow = g -> maxflow();
 
 	printf("Flow = %d\n", flow);
 	printf("Minimum cut:\n");
-	if (g->what_segment(0) == GraphType::SOURCE)
-		printf("node0 is in the SOURCE set\n");
-	else
-		printf("node0 is in the SINK set\n");
-	if (g->what_segment(1) == GraphType::SOURCE)
-		printf("node1 is in the SOURCE set\n");
-	else
-		printf("node1 is in the SINK set\n");
+	
+	if (g->what_segment(0) == GraphType::SOURCE) printf("node0 is in the SOURCE set\n");
+	else printf("node0 is in the SINK set\n");
+	
+	if (g->what_segment(1) == GraphType::SOURCE) printf("node1 is in the SOURCE set\n");
+	else printf("node1 is in the SINK set\n");
+
+
+	g -> edit_tweights(0, 15, 5);
+	/* Re-computing max-flow */
+	flow = g -> maxflow(true);
+
+	/* Printing the results */
+	printf("Flow = %d\n", flow);
+	printf("Minimum cut:\n");
+	
+	if (g->what_segment(0) == GraphType::SOURCE) printf("node0 is in the SOURCE set\n");
+	else printf("node0 is in the SINK set\n");
+	if (g->what_segment(1) == GraphType::SOURCE) printf("node1 is in the SOURCE set\n");
+	else printf("node1 is in the SINK set\n");
+
+	g -> edit_edge(0,1,1,4);
+	/* Re-computing max-flow */
+	flow = g -> maxflow(true);
+
+	/* Printing the results */
+	printf("Flow = %d\n", flow);
+	printf("Minimum cut:\n");
+	
+	if (g->what_segment(0) == GraphType::SOURCE) printf("node0 is in the SOURCE set\n");
+	else printf("node0 is in the SINK set\n");
+	if (g->what_segment(1) == GraphType::SOURCE) printf("node1 is in the SOURCE set\n");
+	else printf("node1 is in the SINK set\n");
+
 
 	delete g;
-
 	return 0;
 }
-
-
-///////////////////////////////////////////////////
