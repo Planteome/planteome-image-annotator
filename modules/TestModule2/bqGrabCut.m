@@ -55,3 +55,5 @@ function seg_fg = bqGrabCut(session, I, I_d, featChoice, noBins, nlink_sigma, in
                 [edges-1, interaction_cost * weights]' ...
                 ) , lattice_size(1), lattice_size(2) );
 end
+
+%update 10/25/2015
