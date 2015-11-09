@@ -2,6 +2,8 @@
 #include "mex.h"
 #include "graph.h"
 
+#include "graph.cpp"
+
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     // Variable Initializations
