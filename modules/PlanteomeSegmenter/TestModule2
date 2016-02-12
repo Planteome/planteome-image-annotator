@@ -1,7 +1,0 @@
-#!/bin/sh
-
-
-echo $* >> /home/bisque/dump/output
-wget -O mex $1
-cp mex /home/bisque/dump
-

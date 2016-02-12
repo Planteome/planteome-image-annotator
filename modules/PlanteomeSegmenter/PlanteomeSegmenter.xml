@@ -1,4 +1,4 @@
-<module name="TestModule2" type="runtime" >
+<module name="Planteome Segmenter" type="runtime" >
 
     <tag name="inputs">
         <tag name="image_url" type="image" >
@@ -34,7 +34,7 @@
     </tag>
 
 
-    <tag name="title" value="TestModule2" />
+    <tag name="title" value="Planteome Segmenter" />
     <tag name="authors" value="Ryan Kitchen" />
     <tag name="help"      type="file" value="public/help.html" />
     <tag name="thumbnail" type="file" value="public/icon-48.png" />
