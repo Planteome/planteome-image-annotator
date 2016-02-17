@@ -37,13 +37,13 @@ function segmentedImage = PlanteomeSegmenter(mex_url, access_token, image_url, v
     
     % Foreground - Background signal, used to indicate whether current
     % polyline is foreground:1 or background:2
-    fbs = 1; 
+    isForeground = 1; 
 
     for regionIter = 1 : size(polylines, 1)
         polyline = bqBresenham(polylines{regionIter}.getVertices());
-        if fbs == 1
+        if isForeground == 1
             I_d{1} = [I_d{1};uint64(sub2ind([noRows noCols], polyline(:,1), polyline(:,2)))];
-        elseif fbs == 2
+        elseif isForeground == 0
             I_d{2} = [I_d{2};uint64(sub2ind([noRows noCols], polyline(:,1), polyline(:,2)))];
         end
     end
