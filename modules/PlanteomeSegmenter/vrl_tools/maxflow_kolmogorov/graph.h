@@ -94,12 +94,18 @@ public:
 	// IMPORTANT: see note about the constructor 
 	void add_edge(node_id i, node_id j, captype cap, captype rev_cap);
 
+	// Adds new edges 'SOURCE->i' and 'i->SINK' with corresponding weights.
+	// Can be called multiple times for each node.
+	// Weights can be negative.
+	// NOTE: the number of such edges is not counted in edge_num_max.
+	//       No internal memory is allocated by this call.
+	void add_tweights(node_id i, tcaptype cap_source, tcaptype cap_sink);
 
 
 	// Computes the maxflow. Can be called several times.
 	// FOR DESCRIPTION OF reuse_trees, SEE mark_node().
 	// FOR DESCRIPTION OF changed_list, SEE remove_from_changed_list().
-	flowtype maxflow(bool reuse_trees = false, Block<node_id>** changed_list = NULL);
+	flowtype maxflow(bool reuse_trees = false, Block<node_id>* changed_list = NULL);
 
 	// After the maxflow is computed, this function returns to which
 	// segment the node 'i' belongs (Graph<captype,tcaptype,flowtype>::SOURCE or Graph<captype,tcaptype,flowtype>::SINK).
@@ -114,9 +120,11 @@ public:
 	//       ADVANCED INTERFACE FUNCTIONS       //
 	//      (provide access to the graph)       //
 	//////////////////////////////////////////////
+
 private:
 	struct node;
 	struct arc;
+
 public:
 
 	////////////////////////////
@@ -172,31 +180,13 @@ public:
 	void set_trcap(node_id i, tcaptype trcap); 
 	void set_rcap(arc* a, captype rcap);
 
-	// Edit capacity of t-edge when "using" tree-recycling 
-	void edit_tweights(node_id i, tcaptype cap_source, tcaptype cap_sink);
-	
-	// Edit capacity of t-edge when "not using" tree-recycling :		
-	// If yoy are editing capacities using this function, "maxflow(false)" needs to be called
-	void edit_tweights_wt(node_id i, tcaptype cap_source, tcaptype cap_sink);
-	
-	// Edit capacity of n-edge when "using" tree-recycling 
-	void edit_edge(node_id from, node_id to, captype cap, captype rev_cap);
-	
-	// Edit capacity of n-edge when "not using" tree-recycling :		
-	// If yoy are editing capacities using this function, "maxflow(false)" needs to be called
-	void edit_edge_wt(node_id from, node_id to, captype cap, captype rev_cap);
-	
-
-	tcaptype MIN(tcaptype a, tcaptype b);
-	tcaptype MAX(tcaptype a, tcaptype b);
-	
 	////////////////////////////////////////////////////////////////////
 	// 5. Functions related to reusing trees & list of changed nodes. //
 	////////////////////////////////////////////////////////////////////
 
 	// If flag reuse_trees is true while calling maxflow(), then search trees
-	// are reused from previous maxflow computation (unless it's the first call to maxflow()).
-	// In this case BEFORE calling maxflow() the user must
+	// are reused from previous maxflow computation. 
+	// In this case before calling maxflow() the user must
 	// specify which parts of the graph have changed by calling mark_node():
 	//   add_tweights(i),set_trcap(i)    => call mark_node(i)
 	//   add_edge(i,j),set_rcap(a)       => call mark_node(i); mark_node(j)
@@ -209,24 +199,48 @@ public:
 	// do not have any effect.
 	// 
 	// NOTE: 
-	//   1. It is not necessary to call mark_node() if the change is ``not essential'',
-	//      i.e. sign(trcap) is preserved for a node and zero/nonzero status is preserved for an arc.
-	//   2. To check that you marked all necessary nodes, you can call maxflow(true) after calling maxflow(false).
-	//      If everything is correct, the two calls must return the same value of flow. (Useful for debugging).
+	//   - This option cannot be used in the first call to maxflow().
+	//   - It is not necessary to call mark_node() if the change is ``not essential'',
+	//     i.e. sign(trcap) is preserved for a node and zero/nonzero status is preserved for an arc.
+	//   - To check that you marked all necessary nodes, you can call maxflow(false) after calling maxflow(true).
+	//     If everything is correct, the two calls must return the same value of flow. (Useful for debugging).
 	void mark_node(node_id i);
 
 	// If changed_list is not NULL while calling maxflow(), then the algorithm
-	// keeps a list of nodes which could potentially have changed their segmentation label
-	// (unless it's the first call to maxflow).
-	// In this case AFTER calling maxflow() the user must call remove_from_changed_list()
-	// for every node in the list. (Exception: this is necessary only if the next 
-	// maxflow computation uses option reuse_trees).
-	//
+	// keeps a list of nodes which could potentially have changed their segmentation label.
 	// Nodes which are not in the list are guaranteed to keep their old segmentation label (SOURCE or SINK).
+	// Example usage:
 	//
-	// Pointer to the list is returned in changed_list. (See block.h on how to read it).
+	//		typedef Graph<int,int,int> G;
+	//		G* g = new Graph(nodeNum, edgeNum);
+	//		Block<G::node_id>* changed_list = new Block<G::node_id>(128);
 	//
-	// NOTE: The user should not deallocate the returned list. (This will be done by Graph destructor).
+	//		... // add nodes and edges
+	//
+	//		g->maxflow(); // first call should be without arguments
+	//		for (int iter=0; iter<10; iter++)
+	//		{
+	//			... // change graph, call mark_node() accordingly
+	//
+	//			g->maxflow(true, changed_list);
+	//			G::node_id* ptr;
+	//			for (ptr=changed_list->ScanFirst(); ptr; ptr=changed_list->ScanNext())
+	//			{
+	//				G::node_id i = *ptr; assert(i>=0 && i<nodeNum);
+	//				g->remove_from_changed_list(i);
+	//				// do something with node i...
+	//				if (g->what_segment(i) == G::SOURCE) { ... }
+	//			}
+	//			changed_list->Reset();
+	//		}
+	//		delete changed_list;
+	//		
+	// NOTE:
+	//  - If changed_list option is used, then reuse_trees must be used as well.
+	//  - In the example above, the user may omit calls g->remove_from_changed_list(i) and changed_list->Reset() in a given iteration.
+	//    Then during the next call to maxflow(true, &changed_list) new nodes will be added to changed_list.
+	//  - If the next call to maxflow() does not use option reuse_trees, then calling remove_from_changed_list()
+	//    is not necessary. ("changed_list->Reset()" or "delete changed_list" should still be called, though).
 	void remove_from_changed_list(node_id i) 
 	{ 
 		assert(i>=0 && i<node_num && nodes[i].is_in_changed_list); 
@@ -261,8 +275,6 @@ private:
 		tcaptype	tr_cap;		// if tr_cap > 0 then tr_cap is residual capacity of the arc SOURCE->node
 								// otherwise         -tr_cap is residual capacity of the arc node->SINK 
 
-		tcaptype	t_cap;
-		tcaptype	con_flow;
 	};
 
 	struct arc
@@ -272,7 +284,6 @@ private:
 		arc			*sister;	// reverse arc
 
 		captype		r_cap;		// residual capacity
-		captype		e_cap;		// original capacity
 	};
 
 	struct nodeptr
@@ -297,7 +308,6 @@ private:
 
 	// reusing trees & list of changed pixels
 	int					maxflow_iteration; // counter
-	bool				keep_changed_list;
 	Block<node_id>		*changed_list;
 
 	/////////////////////////////////////////////////////////////////////////
@@ -331,6 +341,15 @@ private:
 };
 
 
+
+
+
+
+
+
+
+
+
 ///////////////////////////////////////
 // Implementation - inline functions //
 ///////////////////////////////////////
@@ -348,8 +367,6 @@ template <typename captype, typename tcaptype, typename flowtype>
 	{
 		node_last -> first = NULL;
 		node_last -> tr_cap = 0;
-		node_last -> t_cap = 0;
-		node_last -> con_flow = 0;
 		node_last -> is_marked = 0;
 		node_last -> is_in_changed_list = 0;
 
@@ -365,6 +382,18 @@ template <typename captype, typename tcaptype, typename flowtype>
 		node_last += num;
 		return i;
 	}
+}
+
+template <typename captype, typename tcaptype, typename flowtype> 
+	inline void Graph<captype,tcaptype,flowtype>::add_tweights(node_id i, tcaptype cap_source, tcaptype cap_sink)
+{
+	assert(i >= 0 && i < node_num);
+
+	tcaptype delta = nodes[i].tr_cap;
+	if (delta > 0) cap_source += delta;
+	else           cap_sink   -= delta;
+	flow += (cap_source < cap_sink) ? cap_source : cap_sink;
+	nodes[i].tr_cap = cap_source - cap_sink;
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
@@ -394,9 +423,6 @@ template <typename captype, typename tcaptype, typename flowtype>
 	a_rev -> head = i;
 	a -> r_cap = cap;
 	a_rev -> r_cap = rev_cap;
-	a -> e_cap = cap;
-	a_rev -> e_cap = rev_cap;
-
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
@@ -474,22 +500,6 @@ template <typename captype, typename tcaptype, typename flowtype>
 		i -> next = i;
 	}
 	i->is_marked = 1;
-}
-
-
-template <typename captype, typename tcaptype, typename flowtype> 
-	inline tcaptype Graph<captype,tcaptype,flowtype>::MIN(tcaptype a, tcaptype b)
-{
-	if (a<b) return a;
-	return b;
-}
-
-
-template <typename captype, typename tcaptype, typename flowtype> 
-inline tcaptype Graph<captype,tcaptype,flowtype>::MAX(tcaptype a, tcaptype b)
-{
-	if (a>b) return a;
-	return b;
 }
 
 
