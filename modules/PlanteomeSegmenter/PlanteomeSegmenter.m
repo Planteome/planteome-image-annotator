@@ -34,11 +34,37 @@ function segmentedImage = PlanteomeSegmenter(mex_url, access_token, image_url, v
     % Parse the polylines vertices.
     polylines = session.mex.findNodes('//tag[@name="inputs"]/tag[@name="resource_url"]/gobject[@name="stroke"]/polyline');
     [noRows noCols noSlices] = size(I);
-
-    for regionIter = 1 : size(polylines, 1)
-        polyline = bqBresenham(polylines{regionIter}.getVertices());
-        I_d{regionIter} = uint64(sub2ind([noRows noCols], polyline(:,1), polyline(:,2)));
+    
+    fg_polylines = 0;
+    bg_polylines = 0;
+    line = polylines{0}.getVertices();
+    save('line','line');
+    for current_polyline = 1 : size(polylines,1)
+	line = polylines{current_polyline}.getVertices();
+        polyline = bqBresenham(line);
+        if (line{0}.ch ==0)
+	    if (bg_polylines ==0)
+		I_d{2} = uint64(sub2ind([noRows noCols], polyline(:,1), polyline(:,2)));
+	    else
+		I_d{2} = vertcat(I_d{2},uint64(sub2ind([noRows noCols], polyline(:,1), polyline(:,2))));
+	    end
+	    bg_polylines=bg_p olylines+1;
+	else
+	    if (fg_polylines ==0)
+		I_d{1} = uint64(sub2ind([noRows noCols], polyline(:,1), polyline(:,2)));
+	    else
+		I_d{1} = vertcat(I_d{1},uint64(sub2ind([noRows noCols], polyline(:,1), polyline(:,2))));
+	    end
+	    fg_polylines=fg_polylines+1;
+	end
     end
+	  
+    
+    
+    %for regionIter = 1 : size(polylines, 1)
+     %   polyline = bqBresenham(polylines{regionIter}.getVertices());
+     %   I_d{regionIter} = uint64(sub2ind([noRows noCols], polyline(:,1), polyline(:,2)));
+    %end
     
     session.update('Working...');
     segmentedImage = bqGrabCut(session, I, I_d, featChoice, noBins, nlink_sigma, interaction_cost, HARDCODE_SEEDS, USE_STROKE_DT, STROKE_VAR);

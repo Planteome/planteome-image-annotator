@@ -18,7 +18,9 @@
 
             <gobject name="stroke">
                 <template>
-                    <tag name="gobject" value="polyline" />
+                    <tag name="gobject" value="polyline">
+			<tag name="color" value="#00FF00"/>
+		    </tag>
                     <tag name="require_gobjects">
                         <tag name="amount" value=">=2" />
                         <tag name="fail_message" value="Requires two polylines; first one inside object of interest (foreground) and second across background." />
@@ -130,7 +132,9 @@
     <tag name="display_options" >
         <tag name="group" value="Segmentation" />
     </tag>
-
+    <tag name="interface">
+	<tag name="javascript" type="file" value="javascript_override.js" />
+    </tag>
     <tag name="title" value="Graph Cuts-based Image Matting / Segmentation" />
     <tag name="authors" value="Vignesh Jagadeesh, BISQUE: Utkarsh Gaur" />
     <tag name="help" type="file" value="public/help.html" />
