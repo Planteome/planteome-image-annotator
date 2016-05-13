@@ -1,31 +1,35 @@
-window.onload = function(){
-
-segmentationLayer = 1;
+segmentationLayer = 3;
 
 function setSegLayer(val){
-  segmentationLayer = val;
+    segmentationLayer = val;
 }
+
+window.onload = function(){
+
+
+
 
 myButton = document.createElement("input");
 myButton.type = "button";
 myButton.value = "FG";
-myButton.onclick = "setSegLayer(1)";
+myButton.onclick = function(){segmentationLayer=1;};
 editorDiv = document.getElementById("inputs");
 editorDiv.appendChild(myButton);
 
 myButton2 = document.createElement("input");
 myButton2.type = "button";
 myButton2.value= "BG";
-myButton2.onclick = "setSegLayer(0)";
+myButton2.onclick = function(){segmentationLayer=0;};
 editorDiv.appendChild(myButton2);
 
 
 
 ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
-   
+    //alert(segmentationLayer)
     var v = this.viewer.current_view;
     var g = this.current_gob;
     var me = this;
+    alert(v.z);
     parent = parent || this.global_parent;
 
     if (g == null) {
@@ -58,7 +62,7 @@ ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
     }
 
     if (e.evt.detail==1 && pt.x && pt.y && !isNaN(pt.x) && !isNaN(pt.y) && pt.x!==prev.x && pt.y!==prev.y)
-        g.vertices.push (new BQVertex (pt.x, pt.y, v.z, v.t, segmentationLayer, index));
+        g.vertices.push (new BQVertex (pt.x, pt.y, segmentationLayer, v.t,null, index));
 
     // Double click ends the object otherwise add points
     this.current_gob = (e.evt.detail > 1)?null:g;
@@ -82,5 +86,44 @@ ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
     }
 };
 
+CanvasShape.prototype.isVisible = function (z,t, tolerance_z) {
+    
+   
+    //test visible takes the shape and tests if its bounding box is intersected by
+    //the current view plane
+    if(!this.visibility) return false; //visibility is a tag passed from the tagger
+    
+    var test_visible_dim = function(min, max,  pos_view, tolerance ) {
+        return (pos_view >= min - 0.5*tolerance && pos_view <= max + 0.5*tolerance);
+    }
+    
+    var viewstate = this.renderer.viewer.current_view;
+    
+    //if(!pos) return false;
+    var proj = viewstate.imagedim.project,
+    proj_gob = viewstate.gob_projection,
+    
+    tolerance_z = tolerance_z || viewstate.gob_tolerance.z || 1.0;
+    tolerance_z = tolerance_z + 5;
+    var tolerance_t = viewstate.gob_tolerance.t || 1.0;
+    if(!this.bbox)
+        this.bbox = this.caclBbox();
+    var bbox = this.bbox;
+    var min = bbox.min;
+    var max = bbox.max;
+    var t = t ? t : viewstate.t;
+    var z = z ? z : viewstate.z;
+    if (proj_gob==='all') {
+        return true;
+    } else if (proj === 'projectmaxz' || proj === 'projectminz' || proj_gob==='Z') {
+        return test_visible_dim(min[3], max[3], t, tolerance_t);
+    } else if (proj === 'projectmaxt' || proj === 'projectmint' || proj_gob==='T') {
+        return test_visible_dim(min[2], max[2], z, tolerance_z);
+    } else if (!proj || proj === 'none') {
+        return (test_visible_dim(min[2], max[2], z, tolerance_z) &&
+        test_visible_dim(min[3], max[3], t, tolerance_t));
+    }
+    return true;
+}
 
 };
