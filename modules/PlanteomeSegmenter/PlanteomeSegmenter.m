@@ -37,9 +37,7 @@ function segmentedImage = PlanteomeSegmenter(mex_url, access_token, image_url, v
     
     fg_polylines = 0;
     bg_polylines = 0;
-    %line = polylines{0}.getVertices();
-    % save('line','line');
-    'fuck this shit'
+
     
     for current_polyline = 1:size(polylines,1)
         line = polylines{current_polyline}.getVertices();
@@ -63,9 +61,6 @@ function segmentedImage = PlanteomeSegmenter(mex_url, access_token, image_url, v
         end
     end
           
-    'Oh hey it actually worked'
-    ddd = 7
-    
     %for regionIter = 1 : size(polylines, 1)
     %   polyline = bqBresenham(polylines{regionIter}.getVertices());
     %   I_d{regionIter} = uint64(sub2ind([noRows noCols], polyline(:,1), polyline(:,2)));

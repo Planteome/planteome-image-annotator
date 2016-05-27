@@ -1,4 +1,4 @@
-segmentationLayer = 3;
+segmentationLayer = 1;
 
 function setSegLayer(val){
     segmentationLayer = val;
