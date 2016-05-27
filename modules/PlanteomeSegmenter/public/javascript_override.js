@@ -12,16 +12,24 @@ window.onload = function(){
 myButton = document.createElement("input");
 myButton.type = "button";
 myButton.value = "FG";
-myButton.onclick = function(){segmentationLayer=1;};
+myButton.onclick = function(){
+    segmentationLayer=1-segmentationLayer;
+    if(segmentationLayer==0) myButton.value = "BG";
+    else myButton.value = "FG";
+};
 editorDiv = document.getElementById("inputs");
 editorDiv.appendChild(myButton);
-
+/*
 myButton2 = document.createElement("input");
 myButton2.type = "button";
 myButton2.value= "BG";
-myButton2.onclick = function(){segmentationLayer=0;};
+myButton2.onclick = function(){
+    segmentationLayer=0;
+    myButton.bgcolor=myButton2.bgcolor;
+    myButton2.bgcolor="#FF0000";
+};
 editorDiv.appendChild(myButton2);
-
+*/
 
 
 ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
@@ -29,7 +37,7 @@ ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
     var v = this.viewer.current_view;
     var g = this.current_gob;
     var me = this;
-    alert(v.z);
+    //alert(v.z);
     parent = parent || this.global_parent;
 
     if (g == null) {
