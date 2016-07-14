@@ -38,6 +38,11 @@ ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
     if (g == null) {
         g = new BQGObject(type);
 
+	if (myButton.value == "FG")
+		g.shape.setColor(255,0,0);
+	else
+		g.shape.setColor(50,50,255);
+
         if (parent) {
             parent.addgobjects(g);
             g.edit_parent = parent;
@@ -58,14 +63,10 @@ ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
         var dp = dx*dx + dy*dy;
 
 
-	if (myButton.value == "FG")
-		g.shape.setColor(255,0,0);
-	else
-		g.shape.setColor(50,50,255);
-
         if(dp < 128/this.renderer.scale()){
             this.finish_add(g, g.edit_parent);
             this.renderer.resetShapeCornerFill();
+
 
             return;
         };
@@ -82,10 +83,6 @@ ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
     if (!this.current_gob){
         this.finish_add(g, g.edit_parent);
 
-	if (myButton.value == "FG")
-		g.shape.setColor(255,0,0);
-	else
-		g.shape.setColor(50,50,255);
         return;
     }
     else{
@@ -99,10 +96,13 @@ ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
         
 	/* this makes the grabbing motion for the red lines to follow the hand */
 	this.renderer.setmousemove(function(e){
-		if (myButton.value == "FG")
+
+
+		/*if (myButton.value == "FG")
 			g.shape.setColor(255,0,0);
 		else
-			g.shape.setColor(50,50,255);
+			g.shape.setColor(50,50,255);*/
+
 			
         	g.shape.onDragCreate(e,[x,y]);
 		me.display_gob_info(g);
