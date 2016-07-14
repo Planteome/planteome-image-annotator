@@ -57,6 +57,12 @@ ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
         var dy = g.vertices[0].y - pt.y;
         var dp = dx*dx + dy*dy;
 
+
+	if (myButton.value == "FG")
+		g.shape.setColor(255,0,0);
+	else
+		g.shape.setColor(50,50,255);
+
         if(dp < 128/this.renderer.scale()){
             this.finish_add(g, g.edit_parent);
             this.renderer.resetShapeCornerFill();
@@ -75,6 +81,11 @@ ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
 
     if (!this.current_gob){
         this.finish_add(g, g.edit_parent);
+
+	if (myButton.value == "FG")
+		g.shape.setColor(255,0,0);
+	else
+		g.shape.setColor(50,50,255);
         return;
     }
     else{
