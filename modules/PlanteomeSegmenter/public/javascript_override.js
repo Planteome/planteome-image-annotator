@@ -1,19 +1,24 @@
+segmentationLayer = 1;
+
+function setSegLayer(val){
+    segmentationLayer = val;
+}
+
 window.onload = function(){
+
+
+
 
 myButton = document.createElement("input");
 myButton.type = "button";
 myButton.value = "FG";
-
-/* bug where hitting F5 sets the FG button below the image instead */
-
 myButton.onclick = function(){
-    if(myButton.value == "FG") myButton.value = "BG";
+    segmentationLayer=1-segmentationLayer;
+    if(segmentationLayer==0) myButton.value = "BG";
     else myButton.value = "FG";
 };
-
 editorDiv = document.getElementById("inputs");
 editorDiv.appendChild(myButton);
-
 /*
 myButton2 = document.createElement("input");
 myButton2.type = "button";
@@ -28,7 +33,7 @@ editorDiv.appendChild(myButton2);
 
 
 ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
-    
+    //alert(segmentationLayer)
     var v = this.viewer.current_view;
     var g = this.current_gob;
     var me = this;
@@ -37,75 +42,52 @@ ImgEdit.prototype.basic_polygon = function (type, parent, e, x, y) {
 
     if (g == null) {
         g = new BQGObject(type);
-
-	if (myButton.value == "FG")
-		g.shape.setColor(255,0,0);
-	else
-		g.shape.setColor(50,50,255);
-
         if (parent) {
             parent.addgobjects(g);
             g.edit_parent = parent;
         } else
             this.viewer.image.addgobjects(g);
     }
-	
+
     var pt = v.inverseTransformPoint(x,y);
     var index = g.vertices.length;
-    var prev = index > 0 ? g.vertices[index-1] : {x:-1,y:-1};
+    var prev = index>0?g.vertices[index-1]:{x:-1,y:-1};
 
-    //if we want to close this without adding more points
-    
+
+    //if we want to close this sucker without adding more points
     if(index > 2){
         //var ip = v.inverseTransformPoint(g.vertices[0].x,g.vertices[0].y);
         var dx = g.vertices[0].x - pt.x;
         var dy = g.vertices[0].y - pt.y;
         var dp = dx*dx + dy*dy;
 
-
         if(dp < 128/this.renderer.scale()){
             this.finish_add(g, g.edit_parent);
             this.renderer.resetShapeCornerFill();
-
 
             return;
         };
     }
 
     if (e.evt.detail==1 && pt.x && pt.y && !isNaN(pt.x) && !isNaN(pt.y) && pt.x!==prev.x && pt.y!==prev.y)
-    {
-        g.vertices.push (new BQVertex (pt.x, pt.y, myButton.value == "FG" ? 1 : 0, v.t, null, index));
-    }
+        g.vertices.push (new BQVertex (pt.x, pt.y, segmentationLayer, v.t,null, index));
 
     // Double click ends the object otherwise add points
-    this.current_gob = (e.evt.detail > 1) ? null : g;
+    this.current_gob = (e.evt.detail > 1)?null:g;
 
     if (!this.current_gob){
         this.finish_add(g, g.edit_parent);
-
         return;
     }
     else{
         if(g.shape)
             g.shape.sprite.remove();
-
-	/* this renders all of the vertices */
         this.visit_render.visitall(g, [v]);
         g.shape.postEnabled = false;
         //this.renderer.setmousemove(callback({shape: g.shape, start: [x,y]}, g.shape.onDragCreate));
-        
-	/* this makes the grabbing motion for the red lines to follow the hand */
-	this.renderer.setmousemove(function(e){
-
-
-		/*if (myButton.value == "FG")
-			g.shape.setColor(255,0,0);
-		else
-			g.shape.setColor(50,50,255);*/
-
-			
-        	g.shape.onDragCreate(e,[x,y]);
-		me.display_gob_info(g);
+        this.renderer.setmousemove(function(e){
+            g.shape.onDragCreate(e,[x,y]);
+            me.display_gob_info(g);
         });
 
         this.begin_add(g, g.edit_parent);
